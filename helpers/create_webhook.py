@@ -71,7 +71,6 @@ def create_webhook(asana_token, target_url, resource_gid, action_filter, resourc
         return None
     
     
-
 # creating specific webhooks
 # event - when new task is added/created in project 'In'
 

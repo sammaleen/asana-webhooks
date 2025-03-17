@@ -1,24 +1,31 @@
 name: Deploy to PythonAnywhere
+
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]  # or your chosen branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      
-      - name: Execute remote ssh commands
-        uses: appleboy/ssh-action@master
-        with:
-          host: eu.pythonanywhere.com  # Changed for EU servers
-          username: ${{ secrets.PYTHONANYWHERE_USERNAME }}
-          password: ${{ secrets.PYTHONANYWHERE_PASSWORD }}
-          script: |
-            cd /home/${{ secrets.PYTHONANYWHERE_USERNAME }}/YOUR_REPO_NAME
-            git pull origin main
-            source venv/bin/activate
-            pip install -r requirements.txt
-            touch /var/www/${{ secrets.PYTHONANYWHERE_USERNAME }}_eu_pythonanywhere_com_wsgi.py
+      # 1. Check out the repo
+      - uses: actions/checkout@v3
+
+      # 2. Set up SSH
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PYTHONANYWHERE_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan ssh.eu.pythonanywhere.com >> ~/.ssh/known_hosts
+
+      # 3. SSH into PythonAnywhere and pull the latest code
+      - name: SSH into PythonAnywhere and pull latest code
+        run: |
+          ssh sammaleen@ssh.eu.pythonanywhere.com "cd /home/sammaleen/asana-webhooks && git pull origin main"
+
+      # 4. Reload the web app (optional)
+      - name: Reload web app
+        run: |
+          ssh sammaleen@ssh.eu.pythonanywhere.com "touch /var/www/sammaleen_eu_pythonanywhere_com_wsgi.py"
